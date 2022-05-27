@@ -15,10 +15,7 @@ class Tag(models.Model):
 class Recipe(models.Model):
     name = models.CharField(max_length=256)
     text = models.TextField()
-    ingredients = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-        related_name="recipes")
-    tags = models.ForeignKey(Tag, on_delete= models.SET_NULL)
+    ingredients = models.ManyToManyField(Ingredient, related_name="recipes")
+    tags = models.ManyToManyField(Tag, related_name='recipes')
     image = models.ImageField()
     cooking_time = models.IntegerField()
