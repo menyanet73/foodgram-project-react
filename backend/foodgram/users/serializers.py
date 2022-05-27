@@ -9,3 +9,4 @@ class SignUpUserSerializer(serializers.ModelSerializer):
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
 
     def validate_username(self, username):
+        pass
