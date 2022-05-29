@@ -7,6 +7,7 @@ class User(AbstractUser):
     email = models.EmailField(verbose_name='e-mail', unique=True)
     first_name = models.CharField(max_length=150, verbose_name='Имя')
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')
+    # objects = CustomUserManager
     
     class Meta:
         ordering = ['id']
@@ -18,3 +19,14 @@ class User(AbstractUser):
         ]
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        
+        
+class Subscribe(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following')
+    follower = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower')
