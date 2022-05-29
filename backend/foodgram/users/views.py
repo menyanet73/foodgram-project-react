@@ -28,20 +28,20 @@ class UserViewSet(CreateListRetrieveViewset):
 
     @action(["get"], detail=False) #TODO: Доделать эндпоинт
     def me(self, request, *args, **kwargs):
-        # self.get_object = self.request.user
-        return serializers.UsersSerializer(instance=request.user)
-        if request.method == "GET":
-            return self.retrieve(request, *args, **kwargs)
+        user = get_object_or_404(models.User, id=request.user.pk)
+        serializer = self.get_serializer(instance=user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         super().create(request, *args, **kwargs)
+        user = get_object_or_404(
+            models.User, username=request.data['username'])
         return Response(
             {
-                "email": request.data['email'],
-                "id": request.data['pk'],
-                "username": request.data['username'],
-                "first_name": request.data['first_name'],
-                "last_name": request.data['last_name'],
-                
-            }
+                "email": user.email,
+                "id": user.pk,
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            }, status=status.HTTP_200_OK
         )
