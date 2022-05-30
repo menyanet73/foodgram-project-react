@@ -40,3 +40,26 @@ class UsersSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         return self.context['request'].user in obj.following.all()
+
+
+class FollowSerializer(UsersSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count')
+        
+    def recipes(self, obj):
+        return obj.recipes.all()
+    
+    def recipes_cout(self, obj):
+        return obj.recipes.all().count()

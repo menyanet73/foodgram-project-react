@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import User
 
 
 class Ingredient(models.Model):
@@ -14,6 +15,10 @@ class Tag(models.Model):
     
 class Recipe(models.Model):
     name = models.CharField(max_length=256)
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='recipes')
     text = models.TextField()
     ingredients = models.ManyToManyField(Ingredient, related_name="recipes")
     tags = models.ManyToManyField(Tag, related_name='recipes')
