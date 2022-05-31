@@ -1,6 +1,7 @@
-from rest_framework import mixins, generics
+from rest_framework import mixins, viewsets
 
 
 class FollowViewset(mixins.CreateModelMixin,
-                    generics.GenericAPIView):
+                    # mixins.DestroyModelMixin,
+                    viewsets.GenericViewSet):
     pass
