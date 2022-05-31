@@ -8,6 +8,11 @@ from djoser.views import TokenCreateView
 # router = routers.DefaultRouter()
 router = routers.SimpleRouter()
 router.register(r'users', views.UserViewSet, basename='users')
+# router.register(
+#     r'users/(?P<user_id>\d+)',
+#     views.FollowViewset,
+#     basename='subscribe')
+
 
 urlpatterns = [
     # path('users/', views.UsersView.as_view(), name='signup'),

@@ -1,5 +1,6 @@
-from rest_framework import serializers
-from users.models import User
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers, validators
+from users.models import User, Follow
 from djoser.serializers import UserCreateSerializer
 
 
@@ -39,4 +40,41 @@ class UsersSerializer(serializers.ModelSerializer):
             'is_subscribed')
 
     def get_is_subscribed(self, obj):
-        return self.context['request'].user in obj.following.all()
+        followers = self.context['request'].user.follower
+        return followers.filter(following=obj).exists()
+
+
+class FollowSerializer(UsersSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count')
+        
+    def get_recipes(self, obj):
+        return obj.recipes.all()
+    
+    def get_recipes_count(self, obj):
+        return obj.recipes.all().count()
+    
+class FollowCreateSerializer(serializers.ModelSerializer):
+        
+    class Meta:
+        model = Follow
+        fields = '__all__'
+
+    def validate_following(self, following):
+        if self.context.get('request').method != 'POST':
+            return following
+        if self.context.get('request').user == following:
+            raise serializers.ValidationError('Нельзя подписаться на себя')
+        return following
