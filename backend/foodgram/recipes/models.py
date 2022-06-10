@@ -15,7 +15,8 @@ class Ingredient(models.Model):
         
 
 class IngredientAmount(models.Model):
-    ingredient = models.ForeignKey(
+    item_id = models.AutoField(primary_key=True)
+    id = models.ForeignKey(
         Ingredient, on_delete=models.CASCADE, related_name='amount')
     amount = models.IntegerField()
     
@@ -24,7 +25,7 @@ class IngredientAmount(models.Model):
         verbose_name_plural = 'Количество ингредиента'
         
     def __str__(self) -> str:
-        return f'{self.ingredient.name} {self.amount}'
+        return f'{self.id.name} {self.amount}'
 
 
 class Tag(models.Model):

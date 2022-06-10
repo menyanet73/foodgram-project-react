@@ -20,5 +20,5 @@ class RecipeViewset(viewsets.ModelViewSet):
     serializer_class = serializers.RecipeSerializer
     
     def perform_create(self, serializer):
-        serializer.validated_data['author'] = self.context['request'].user
+        serializer.validated_data['author'] = serializer.context['request'].user
         return super().perform_create(serializer)

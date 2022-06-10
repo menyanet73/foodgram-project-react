@@ -1,4 +1,6 @@
 from base64 import b64decode
+from uuid import uuid4
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 from recipes.models import IngredientAmount, Tag, Ingredient, Recipe
 from PIL import Image
@@ -20,30 +22,27 @@ class IngregientsSerializer(serializers.ModelSerializer):
         
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
-    # id = serializers.SerializerMethodField()
     
     class Meta:
         fields = ['id', 'amount']
         model = IngredientAmount
 
-    # def get_id(self, obj):
-    #     return obj.ingredient
-        
-        
-class ImageSerializerField(serializers.Field):
+
+class ImageSerializerField(serializers.ImageField):
+
     def to_internal_value(self, data):
-        image = b64decode(data)
-        name = 'newimagename'
-        save_image = open(name, 'wb').write(image)
-        save_image.close()
-        
-        return super().to_internal_value(data)
+        header, body = data.split(';base64,')
+        file_format = header.split('image/')[-1]
+        name = f'{uuid4()}.{file_format}'
+        data = ContentFile(b64decode(body), name)
+        super().to_internal_value(data)
     
 
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientAmountSerializer(many=True)
     is_favorite = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+    image = ImageSerializerField()
     
     class Meta:
         fields = [
@@ -69,3 +68,16 @@ class RecipeSerializer(serializers.ModelSerializer):
     
     def to_internal_value(self, data):
         return super().to_internal_value(data)
+    
+    def create(self, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        ingredients_list = []
+        for ingredient in ingredients:
+            items = dict(ingredient)
+            ingredient = IngredientAmount.objects.create(
+                id=items['id'], amount=items['amount'])
+            ingredients_list.append(ingredient)
+                
+        recipe = Recipe.objects.create(
+            ingredients=ingredients_list, **validated_data)
+        return recipe
