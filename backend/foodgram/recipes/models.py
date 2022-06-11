@@ -60,3 +60,21 @@ class Recipe(models.Model):
         
     def __str__(self) -> str:
         return self.name
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorites'
+    )
+    recipes = models.ManyToManyField(Recipe, related_name='favorites')
+
+
+class ShoppingCart(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='cart'
+    )
+    recipes = models.ManyToManyField(Recipe, related_name='cart')

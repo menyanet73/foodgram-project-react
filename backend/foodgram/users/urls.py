@@ -1,17 +1,12 @@
-from django.urls import include, path, re_path
+from django.urls import include, path
 from rest_framework import routers
 from users import views
 from djoser.urls import authtoken
 from djoser.views import TokenCreateView
 
 
-# router = routers.DefaultRouter()
 router = routers.SimpleRouter()
 router.register(r'users', views.UserViewSet, basename='users')
-# router.register(
-#     r'users/(?P<user_id>\d+)',
-#     views.FollowViewset,
-#     basename='subscribe')
 
 
 urlpatterns = [

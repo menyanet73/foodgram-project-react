@@ -31,11 +31,11 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
 
 class ImageSerializerField(serializers.ImageField):
-
+    
     def to_internal_value(self, data):
         header, body = data.split(';base64,')
         file_format = header.split('image/')[-1]
-        name = f'{uuid4()}.{file_format}'
+        name = f'recipes/images/{uuid4()}.{file_format}'
         data = ContentFile(b64decode(body), name)
         return super().to_internal_value(data)
 
@@ -84,6 +84,8 @@ class RecipeSerializer(serializers.ModelSerializer):
             tag = get_object_or_404(Tag, id=tag.id)
             recipe.tags.add(tag.id)
         return recipe
+    
+    
     
     def update(self, instance, validated_data):
         if 'ingredients' in self.initial_data:
@@ -159,3 +161,10 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     
     def to_internal_value(self, data):
         return super().to_internal_value(data)
+    
+
+class RecipeLiteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'name', 'image', 'cooking_time']
