@@ -11,5 +11,5 @@ router.register(r'recipes', views.RecipeViewset)
 
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
 ]

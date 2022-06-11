@@ -51,7 +51,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         IngredientAmount, related_name="recipes")
     tags = models.ManyToManyField(Tag, related_name='recipes')
-    image = models.TextField()
+    image = models.ImageField()
     cooking_time = models.IntegerField()
     
     class Meta:

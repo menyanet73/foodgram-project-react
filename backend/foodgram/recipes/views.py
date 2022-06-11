@@ -22,3 +22,9 @@ class RecipeViewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.validated_data['author'] = serializer.context['request'].user
         return super().perform_create(serializer)
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return serializers.RecipeGetSerializer
+        else:
+            return serializers.RecipeSerializer
