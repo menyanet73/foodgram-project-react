@@ -84,6 +84,25 @@ class RecipeSerializer(serializers.ModelSerializer):
             tag = get_object_or_404(Tag, id=tag.id)
             recipe.tags.add(tag.id)
         return recipe
+    
+    def update(self, instance, validated_data):
+        if 'ingredients' in self.initial_data:
+            for current_ingredient in instance.ingredients.all():
+                instance.ingredients.remove(current_ingredient)
+            ingredients = validated_data.pop('ingredients')
+            for ingredient in ingredients: #TODO: сделать валидацию и удаление рецепта
+                items = dict(ingredient)
+                ingredient = IngredientAmount.objects.get_or_create(
+                    id=items['id'], amount=items['amount'])
+                instance.ingredients.add(ingredient[0].item_id)
+        if 'tags' in self.initial_data:
+            for current_tag in instance.tags.all():
+                instance.tags.remove(current_tag)
+            tags = validated_data.pop('tags')
+            for tag in tags:
+                tag = get_object_or_404(Tag, id=tag.id)
+                instance.tags.add(tag.id)
+        return super().update(instance, validated_data)
 
 
 class TagGetSerializer(serializers.ModelSerializer):
