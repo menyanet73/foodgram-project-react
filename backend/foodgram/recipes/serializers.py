@@ -3,7 +3,7 @@ from uuid import uuid4
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from recipes.models import IngredientAmount, Tag, Ingredient, Recipe
+from recipes.models import Favorite, IngredientAmount, Tag, Ingredient, Recipe
 from PIL import Image
 from users.serializers import UsersSerializer
 
@@ -63,7 +63,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         
     def get_is_favorite(self, obj):
-        return None
+        return None #TODO: Перенести в другой сериализатор
 
     def get_is_in_shopping_cart(self, obj):
         return None
@@ -152,16 +152,14 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['author']
         model = Recipe
+        ordering = ['-id']
         
     def get_is_favorite(self, obj):
-        return None
+        return obj.favorites.filter(user=self.context.get('request').user).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        return None
-    
-    def to_internal_value(self, data):
-        return super().to_internal_value(data)
-    
+        return obj.cart.filter(user=self.context.get('request').user).exists()
+
 
 class RecipeLiteSerializer(serializers.ModelSerializer):
 

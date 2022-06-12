@@ -7,7 +7,7 @@ from recipes import views
 router = routers.SimpleRouter()
 router.register(r'tags', views.TagViewset)
 router.register(r'ingredients', views.IngredientViewset)
-router.register(r'recipes', views.RecipeViewset)
+router.register(r'recipes', views.RecipeViewset, basename='recipes')
 
 
 urlpatterns = [
