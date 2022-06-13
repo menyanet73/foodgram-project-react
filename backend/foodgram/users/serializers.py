@@ -40,6 +40,8 @@ class UsersSerializer(serializers.ModelSerializer):
             'is_subscribed')
 
     def get_is_subscribed(self, obj):
+        if self.context.get('request').user.id is None:
+            return False
         followers = self.context['request'].user.follower
         return followers.filter(following=obj).exists()
 

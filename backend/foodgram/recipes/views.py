@@ -1,12 +1,20 @@
-from django.http import HttpResponseBadRequest
+import io
+from uuid import uuid4
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.pdfbase import pdfmetrics
+from django.core.files.base import ContentFile
+from django.http import HttpResponseBadRequest, HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from wsgiref.util import FileWrapper
 
+from foodgram.settings import MEDIA_ROOT
 from recipes import paginators, serializers
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import Favorite, Ingredient, IngredientAmount, Recipe, ShoppingCart, Tag
 from recipes.viewsets import ReadOnlyViewset
+from recipes.instruments import create_pdf
 
 
 class TagViewset(ReadOnlyViewset):
@@ -41,12 +49,6 @@ class RecipeViewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.validated_data['author'] = serializer.context['request'].user
         return super().perform_create(serializer)
-    
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return serializers.RecipeGetSerializer
-        else:
-            return serializers.RecipeSerializer
 
     @action(['post', 'delete'], detail=True)
     def favorite(self, request, *args, **kwargs):
@@ -94,4 +96,23 @@ class RecipeViewset(viewsets.ModelViewSet):
 
     @action(['GET'], detail=False)
     def download_shopping_cart(self, request, *args, **kwargs):
-        pass
+        ingredients_amount = IngredientAmount.objects.filter(recipes__cart__user=request.user).prefetch_related('id')
+        ingredients = [ingredient.id.name for ingredient in ingredients_amount]
+        measurement_units = [ingredient.id.measurement_unit for ingredient in ingredients_amount]
+        amount = [ingredient.amount for ingredient in ingredients_amount]
+        shoplist = zip(ingredients, amount, measurement_units)
+        shopdict = {}
+        for ingredient in shoplist:
+            if f'{ingredient[0]}, {ingredient[2]}' in shopdict:
+                shopdict[f'{ingredient[0]}, {ingredient[2]}'] += ingredient[1]
+            else:
+                shopdict[f'{ingredient[0]}, {ingredient[2]}'] = ingredient[1]
+        # name = f'{MEDIA_ROOT}/recipes/shoplists/{request.user.username}_shoplist.pdf'
+        shoplist_string = ''
+        shoplist_string = [f'{ingredient} - {shopdict[ingredient]}' for ingredient in shopdict]
+        buffer = io.BytesIO()
+        content = '\n'.join(shoplist_string)
+        # create_pdf(buffer, content)
+        # response = HttpResponse(FileWrapper(buffer), content_type='application/pdf')
+        response = FileResponse(content, content_type='text/plain')
+        return response
