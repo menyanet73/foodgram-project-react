@@ -1,6 +1,8 @@
 from django.db import models
 from users.models import User
 
+from recipes.validators import validate_color
+
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
@@ -33,7 +35,8 @@ class IngredientAmount(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=30, unique=True, verbose_name='Название')
-    color = models.CharField(max_length=7, verbose_name='Цвет') #TODO: Сделать валидация по регулярным выражениям для HEX
+    color = models.CharField(
+        max_length=7, validators=[validate_color], verbose_name='Цвет')
     slug = models.SlugField(unique=True)
     
     class Meta:
@@ -58,6 +61,7 @@ class Recipe(models.Model):
         Tag, related_name='recipes', verbose_name='Теги')
     image = models.ImageField(verbose_name='Изображение')
     cooking_time = models.IntegerField(verbose_name='Время приготовления')
+    created = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name = 'Рецепт'
