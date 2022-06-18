@@ -3,7 +3,8 @@ from django.db import models
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=150, unique=True)
+    username = models.CharField(
+        max_length=150, unique=True)
     email = models.EmailField(verbose_name='e-mail', unique=True)
     first_name = models.CharField(max_length=150, verbose_name='Имя')
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')

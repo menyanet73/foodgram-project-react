@@ -3,8 +3,9 @@ from users.models import User
 
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=256)
-    measurement_unit = models.CharField(max_length=10)
+    name = models.CharField(max_length=256, verbose_name='Название')
+    measurement_unit = models.CharField(
+        max_length=10, verbose_name='Ед. измерения')
     
     class Meta:
         verbose_name = 'Ингредиент'
@@ -17,8 +18,10 @@ class Ingredient(models.Model):
 class IngredientAmount(models.Model):
     item_id = models.AutoField(primary_key=True)
     id = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE, related_name='amount')
-    amount = models.IntegerField()
+        Ingredient, 
+        on_delete=models.CASCADE,
+        related_name='amount', verbose_name='Ингредиент')
+    amount = models.IntegerField(verbose_name='Количество')
     
     class Meta:
         verbose_name = 'Количество ингредиента'
@@ -29,8 +32,8 @@ class IngredientAmount(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=30, unique=True)
-    color = models.CharField(max_length=7) #TODO: Сделать валидация по регулярным выражениям для HEX
+    name = models.CharField(max_length=30, unique=True, verbose_name='Название')
+    color = models.CharField(max_length=7, verbose_name='Цвет') #TODO: Сделать валидация по регулярным выражениям для HEX
     slug = models.SlugField(unique=True)
     
     class Meta:
@@ -42,17 +45,19 @@ class Tag(models.Model):
     
     
 class Recipe(models.Model):
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, verbose_name='Название')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='recipes')
-    text = models.TextField()
+        related_name='recipes',
+        verbose_name='Автор')
+    text = models.TextField(verbose_name='Текст')
     ingredients = models.ManyToManyField(
-        IngredientAmount, related_name="recipes")
-    tags = models.ManyToManyField(Tag, related_name='recipes')
-    image = models.ImageField()
-    cooking_time = models.IntegerField()
+        IngredientAmount, related_name="recipes", verbose_name='Ингредиенты')
+    tags = models.ManyToManyField(
+        Tag, related_name='recipes', verbose_name='Теги')
+    image = models.ImageField(verbose_name='Изображение')
+    cooking_time = models.IntegerField(verbose_name='Время приготовления')
     
     class Meta:
         verbose_name = 'Рецепт'
@@ -67,15 +72,27 @@ class Favorite(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='favorites'
+        related_name='favorites',
+        verbose_name='Пользователь'
     )
-    recipes = models.ManyToManyField(Recipe, related_name='favorites')
+    recipes = models.ManyToManyField(
+        Recipe, related_name='favorites', verbose_name='Рецепты')
+
+    class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
 
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='cart'
+        related_name='cart',
+        verbose_name='Пользователь'
     )
-    recipes = models.ManyToManyField(Recipe, related_name='cart')
+    recipes = models.ManyToManyField(
+        Recipe, related_name='cart', verbose_name='Рецепты')
+
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'

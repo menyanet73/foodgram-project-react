@@ -4,7 +4,6 @@ from uuid import uuid4
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from users.serializers import UsersSerializer
 
 from recipes.models import Ingredient, IngredientAmount, Recipe, Tag
 

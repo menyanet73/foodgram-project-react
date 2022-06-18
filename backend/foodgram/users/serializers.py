@@ -1,7 +1,7 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import serializers, validators
-from users.models import User, Follow
 from djoser.serializers import UserCreateSerializer
+from rest_framework import serializers
+
+from users.models import Follow, User
 
 
 class SignUpUserSerializer(UserCreateSerializer):
@@ -46,7 +46,7 @@ class UsersSerializer(serializers.ModelSerializer):
         return followers.filter(following=obj).exists()
 
 
-class FollowSerializer(UsersSerializer):
+class FollowResponseSerializer(UsersSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     
@@ -67,16 +67,19 @@ class FollowSerializer(UsersSerializer):
     
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
-    
-class FollowCreateSerializer(serializers.ModelSerializer):
-        
+
+
+class FollowSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Follow
         fields = '__all__'
 
-    def validate_following(self, following):
-        if self.context.get('request').method != 'POST':
-            return following
-        if self.context.get('request').user == following:
+    def validate(self, attrs):
+        if attrs['user'] == attrs['following']:
             raise serializers.ValidationError('Нельзя подписаться на себя')
-        return following
+        if Follow.objects.filter(
+            user=attrs['user'], following=attrs['following']).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя')
+        return super().validate(attrs)
