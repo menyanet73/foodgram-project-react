@@ -8,9 +8,9 @@ from users import models, serializers
 
 
 class UserViewSet(views.UserViewSet):
-    
+
     def get_serializer_class(self):
-        if self.action in ['subscribe', 'subscriptions']: 
+        if self.action in ['subscribe', 'subscriptions']:
             return serializers.FollowSerializer
         return super().get_serializer_class()
 
@@ -31,7 +31,7 @@ class UserViewSet(views.UserViewSet):
     @action(['get'], detail=False)
     def me(self, request, *args, **kwargs):
         return super().me(request, *args, **kwargs)
-    
+
     @action(['post', 'delete'], detail=True)
     def subscribe(self, request, id, *args, **kwargs):
         follower = request.user
@@ -62,26 +62,24 @@ class UserViewSet(views.UserViewSet):
             follows, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
-    
+
     def activation(self, request, *args, **kwargs):
         pass
-    
+
     def resend_activation(self, request, *args, **kwargs):
         pass
-    
+
     def reset_password(self, request, *args, **kwargs):
         pass
-    
+
     def reset_password_confirm(self, request, *args, **kwargs):
         pass
-    
+
     def reset_username(self, request, *args, **kwargs):
         pass
-    
+
     def reset_username_confirm(self, request, *args, **kwargs):
         pass
-    
+
     def set_username(self, request, *args, **kwargs):
         pass
-
-

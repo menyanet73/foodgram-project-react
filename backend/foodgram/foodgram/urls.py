@@ -7,5 +7,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
     path('api/', include('recipes.urls')),
-    path('', include(static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)))
+    path('', include(
+        static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)))
 ]

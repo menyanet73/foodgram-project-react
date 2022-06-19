@@ -43,14 +43,14 @@ class IngredientViewset(ReadOnlyViewset):
 class RecipeViewset(viewsets.ModelViewSet):
     serializer_class = serializers.RecipeSerializer
     pagination_class = paginators.PageNumberLimitPagination
-    
+
     def get_permissions(self):
         if self.request.method in ['PATCH', 'DELETE']:
-            self.permission_classes = [IsAuthor,]
+            self.permission_classes = [IsAuthor, ]
         else:
             self.permission_classes = [permissions.IsAuthenticated]
         return super().get_permissions()
-    
+
     def get_queryset(self):
         favorites = Favorite.objects.filter(
             user=self.request.user.id,
@@ -62,16 +62,21 @@ class RecipeViewset(viewsets.ModelViewSet):
             is_favorite=Exists(favorites),
             is_in_shopping_cart=Exists(shopping_carts))
         author = self.request.query_params.get('author')
+        tags = self.request.query_params.getlist('tags')
         if self.request.query_params.get('is_favorite'):
             queryset = queryset.filter(is_favorite=True)
         if self.request.query_params.get('is_in_shopping_cart'):
             queryset = queryset.filter(is_in_shopping_cart=True)
+        if tags:
+            for tag in tags:
+                queryset = queryset.filter(tags__slug__iexact=tag)
         if author:
             queryset = queryset.filter(author__id=author)
         return queryset.order_by('-created')
 
     def perform_create(self, serializer):
-        serializer.validated_data['author'] = serializer.context['request'].user
+        serializer.validated_data[
+            'author'] = serializer.context['request'].user
         return super().perform_create(serializer)
 
     @action(['post', 'delete'], detail=True)
@@ -116,9 +121,9 @@ class RecipeViewset(viewsets.ModelViewSet):
     @action(['GET'], detail=False)
     def download_shopping_cart(self, request, *args, **kwargs):
         ingredients_amount = (IngredientAmount.objects
-                                .filter(recipes__cart__user=request.user)
-                                .values('id__name', 'id__measurement_unit')
-                                .annotate(amount=Sum('amount')))
+                              .filter(recipes__cart__user=request.user)
+                              .values('id__name', 'id__measurement_unit')
+                              .annotate(amount=Sum('amount')))
         shoplist = [ingredient for ingredient in ingredients_amount]
         content = ''
         for ingredient in shoplist:

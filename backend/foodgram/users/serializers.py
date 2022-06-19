@@ -5,7 +5,7 @@ from users.models import Follow, User
 
 
 class SignUpUserSerializer(UserCreateSerializer):
-    
+
     class Meta:
         model = User
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
@@ -16,7 +16,6 @@ class SignUpUserSerializer(UserCreateSerializer):
                 'Пользователь с таким username уже существует.'
             )
         return username
-            
 
     def validate_email(self, email):
         if User.objects.filter(email=email).exists():
@@ -49,7 +48,7 @@ class UsersSerializer(serializers.ModelSerializer):
 class FollowResponseSerializer(UsersSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = (
@@ -61,10 +60,10 @@ class FollowResponseSerializer(UsersSerializer):
             'is_subscribed',
             'recipes',
             'recipes_count')
-        
+
     def get_recipes(self, obj):
         return obj.recipes.all()
-    
+
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
 
@@ -79,7 +78,7 @@ class FollowSerializer(serializers.ModelSerializer):
         if attrs['user'] == attrs['following']:
             raise serializers.ValidationError('Нельзя подписаться на себя')
         if Follow.objects.filter(
-            user=attrs['user'], following=attrs['following']).exists():
+                user=attrs['user'], following=attrs['following']).exists():
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого пользователя')
         return super().validate(attrs)

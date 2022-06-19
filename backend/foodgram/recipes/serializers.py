@@ -9,10 +9,10 @@ from recipes.models import Ingredient, IngredientAmount, Recipe, Tag
 
 
 class IngredientAmountField(serializers.Field):
-    
+
     def to_internal_value(self, data):
         return data
-    
+
     def to_representation(self, value):
         result_list = []
         ingrediends_amount = value.instance.ingredients.all()
@@ -27,10 +27,10 @@ class IngredientAmountField(serializers.Field):
 
 
 class TagField(serializers.Field):
-    
+
     def to_internal_value(self, data):
         return data
-    
+
     def to_representation(self, value):
         result_list = []
         tags = value.instance.tags.all()
@@ -42,10 +42,10 @@ class TagField(serializers.Field):
                 'slug': tag.slug
             })
         return result_list
-    
+
 
 class ImageSerializerField(serializers.ImageField):
-    
+
     def to_internal_value(self, data):
         try:
             header, body = data.split(';base64,')
@@ -58,14 +58,14 @@ class ImageSerializerField(serializers.ImageField):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         fields = '__all__'
         model = Tag
 
 
 class IngregientsSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         fields = '__all__'
         model = Ingredient
@@ -77,7 +77,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorite = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = ImageSerializerField()
-    
+
     class Meta:
         fields = [
             'id',
@@ -102,16 +102,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient in field:
             if not isinstance(ingredient, dict):
                 raise serializers.ValidationError('Ingredient must be a dict')
-            if not 'id' in ingredient or not 'amount' in ingredient:
+            if 'id' not in ingredient or 'amount' not in ingredient:
                 raise serializers.ValidationError(
                     'Ingredients must contain id and amount fields')
         return field
-    
+
     def validate_tags(self, field):
         if not isinstance(field, list):
             raise serializers.ValidationError('Tags must be a list of tags id')
         return field
-    
+
     def validate_cooking_time(self, field):
         if field < 1:
             raise serializers.ValidationError('Min 1 minute')
@@ -134,7 +134,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data) 
+        recipe = Recipe.objects.create(**validated_data)
         for ingredient in ingredients:
             ingredient_instance = get_object_or_404(
                 Ingredient, id=ingredient['id'])

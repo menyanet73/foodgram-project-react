@@ -8,7 +8,7 @@ class User(AbstractUser):
     email = models.EmailField(verbose_name='e-mail', unique=True)
     first_name = models.CharField(max_length=150, verbose_name='Имя')
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')
-    
+
     class Meta:
         ordering = ['id']
         constraints = [
@@ -19,8 +19,8 @@ class User(AbstractUser):
         ]
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        
-        
+
+
 class Follow(models.Model):
     user = models.ForeignKey(
         User,
@@ -30,7 +30,7 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='following')
-    
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
