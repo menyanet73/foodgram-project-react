@@ -52,7 +52,7 @@ class ImageSerializerField(serializers.ImageField):
             file_format = header.split('image/')[-1]
             name = f'recipes/images/{uuid4()}.{file_format}'
             data = ContentFile(b64decode(body), name)
-        except ValueError:
+        except (ValueError, KeyError):
             raise serializers.ValidationError('Wrong image data')
         return super().to_internal_value(data)
 
