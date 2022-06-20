@@ -1,3 +1,5 @@
+from urllib import parse
+
 from django.db.models import (Case, Exists, IntegerField, OuterRef, Q, Sum,
                               Value, When)
 from django.http import FileResponse
@@ -26,7 +28,7 @@ class IngredientViewset(ReadOnlyViewset):
 
     def get_queryset(self):
         queryset = Ingredient.objects.all()
-        name = self.request.query_params.get('search')
+        name = self.request.query_params.get('name')
         if name:
             query_start = Q(name__istartswith=name.lower())
             query_contain = Q(name__icontains=name.lower())

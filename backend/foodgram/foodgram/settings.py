@@ -7,8 +7,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY', default='')
 
-DEBUG = False
-
+DEBUG = os.getenv('DEBUG', True)
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', ['*'])
 
 INSTALLED_APPS = [
@@ -100,9 +99,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 
-STATIC_URL = '/djangostatic/'
+STATIC_URL = '/staticfiles/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'djangostatic')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 
