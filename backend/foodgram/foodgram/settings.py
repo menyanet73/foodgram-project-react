@@ -1,12 +1,15 @@
 import os
+import dotenv
+
+dotenv.load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'h0^1frus%b79zy4a&-#kv8_2^!w0jfr^)t35j4=@iwm(xz4-+2'
+SECRET_KEY = os.getenv('SECRET_KEY', default='')
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', ['*'])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -97,9 +100,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 
-STATIC_URL = '/static/'
+STATIC_URL = '/djangostatic/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'djangostatic')
 
 MEDIA_URL = '/media/'
 
