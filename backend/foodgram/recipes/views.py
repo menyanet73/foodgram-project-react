@@ -1,5 +1,3 @@
-from urllib import parse
-
 from django.db.models import (Case, Exists, IntegerField, OuterRef, Q, Sum,
                               Value, When)
 from django.http import FileResponse
