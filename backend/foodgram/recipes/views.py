@@ -43,8 +43,13 @@ class IngredientViewset(ReadOnlyViewset):
 
 
 class RecipeViewset(viewsets.ModelViewSet):
-    serializer_class = serializers.RecipeSerializer
     pagination_class = paginators.PageNumberLimitPagination
+    # filter_backends = []
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return serializers.GetRecipeSerializer
+        return serializers.RecipeSerializer
 
     def get_permissions(self):
         if self.request.method in ['PATCH', 'DELETE']:
@@ -70,8 +75,14 @@ class RecipeViewset(viewsets.ModelViewSet):
         if self.request.query_params.get('is_in_shopping_cart'):
             queryset = queryset.filter(is_in_shopping_cart=True)
         if tags:
+            result_queryset = 0
             for tag in tags:
-                queryset = queryset.filter(tags__slug__iexact=tag)
+                new_queryset = queryset.filter(tags__slug__iexact=tag)
+                if not result_queryset:
+                    result_queryset = new_queryset
+                else:
+                    result_queryset.union(new_queryset)
+            queryset = result_queryset
         if author:
             queryset = queryset.filter(author__id=author)
         return queryset.order_by('-created')
@@ -88,7 +99,7 @@ class RecipeViewset(viewsets.ModelViewSet):
         if request.method == 'POST':
             if Favorite.objects.filter(user=user, recipes=recipe).exists():
                 raise exceptions.ValidationError('Recipe already in favorites')
-            favorite = Favorite.objects.get(user=user)
+            favorite = Favorite.objects.create(user=user)
             favorite.recipes.add(recipe)
             favorite.save()
             serializer = serializers.RecipeLiteSerializer(instance=recipe)

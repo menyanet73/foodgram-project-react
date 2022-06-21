@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from recipes.models import Ingredient, IngredientAmount, Recipe, Tag
+from users.serializers import UsersSerializer
 
 
 class IngredientAmountField(serializers.Field):
@@ -77,6 +78,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorite = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = ImageSerializerField()
+    # author = UsersSerializer()
 
     class Meta:
         fields = [
@@ -136,7 +138,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         # recipe = Recipe.objects.create(**validated_data)
         # TODO: Возможно стоит создать через
-        recipe = super().create(self, validated_data)
+        recipe = super().create(validated_data)
         for ingredient in ingredients:
             ingredient_instance = get_object_or_404(
                 Ingredient, id=ingredient['id'])
@@ -164,9 +166,29 @@ class RecipeSerializer(serializers.ModelSerializer):
                 instance.tags.remove(current_tag)
             tags = validated_data.pop('tags')
             for tag in tags:
-                tag = get_object_or_404(Tag, id=tag.id)
+                tag = get_object_or_404(Tag, id=tag)
                 instance.tags.add(tag.id)
         return super().update(instance, validated_data)
+
+
+class GetRecipeSerializer(RecipeSerializer):
+    author = UsersSerializer()
+
+    class Meta:
+        fields = [
+            'id',
+            'tags',
+            'author',
+            'ingredients',
+            'is_favorite',
+            'is_in_shopping_cart',
+            'name',
+            'image',
+            'text',
+            'cooking_time'
+        ]
+        read_only_fields = ['author', 'is_favorite']
+        model = Recipe
 
 
 class RecipeLiteSerializer(serializers.ModelSerializer):
