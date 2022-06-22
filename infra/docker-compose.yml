@@ -7,7 +7,7 @@ services:
     env_file:
       - ../.env
   backend:
-    image: menyanet73/foodgram:v21.06.22
+    image: menyanet73/foodgram:v22.06.22
     restart: always
     volumes:
       - static_value:/app/staticfiles/

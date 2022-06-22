@@ -2,6 +2,7 @@ from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
 from users.models import Follow, User
+from recipes.models import Recipe
 
 
 class SignUpUserSerializer(UserCreateSerializer):
@@ -45,8 +46,15 @@ class UsersSerializer(serializers.ModelSerializer):
         return followers.filter(following=obj).exists()
 
 
+class RecipeLiteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'name', 'image', 'cooking_time']
+
+
 class FollowResponseSerializer(UsersSerializer):
-    recipes = serializers.SerializerMethodField()
+    recipes = RecipeLiteSerializer(many=True)
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -61,8 +69,9 @@ class FollowResponseSerializer(UsersSerializer):
             'recipes',
             'recipes_count')
 
-    def get_recipes(self, obj):
-        return obj.recipes.all()
+    # def get_recipes(self, obj):
+        # serializer = GetRecipeSerializer()
+        # return obj.recipes.all()
 
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()

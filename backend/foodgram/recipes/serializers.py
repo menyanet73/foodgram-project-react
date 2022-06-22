@@ -4,9 +4,9 @@ from uuid import uuid4
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from users.serializers import UsersSerializer
 
 from recipes.models import Ingredient, IngredientAmount, Recipe, Tag
-from users.serializers import UsersSerializer
 
 
 class IngredientAmountField(serializers.Field):
@@ -75,10 +75,9 @@ class IngregientsSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientAmountField()
     tags = TagField()
-    is_favorite = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = ImageSerializerField()
-    # author = UsersSerializer()
 
     class Meta:
         fields = [
@@ -86,14 +85,14 @@ class RecipeSerializer(serializers.ModelSerializer):
             'tags',
             'author',
             'ingredients',
-            'is_favorite',
+            'is_favorited',
             'is_in_shopping_cart',
             'name',
             'image',
             'text',
             'cooking_time'
         ]
-        read_only_fields = ['author', 'is_favorite']
+        read_only_fields = ['author', 'is_favorited']
         model = Recipe
 
     def validate_ingredients(self, field):
@@ -119,12 +118,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Min 1 minute')
         return field
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         if self.context.get('request').user.id is None:
             return False
         if self.context.get('request').method == 'POST':
             return False
-        return obj.is_favorite
+        return obj.is_favorited
 
     def get_is_in_shopping_cart(self, obj):
         if self.context.get('request').user.id is None:
@@ -136,8 +135,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        # recipe = Recipe.objects.create(**validated_data)
-        # TODO: Возможно стоит создать через
         recipe = super().create(validated_data)
         for ingredient in ingredients:
             ingredient_instance = get_object_or_404(
@@ -180,19 +177,12 @@ class GetRecipeSerializer(RecipeSerializer):
             'tags',
             'author',
             'ingredients',
-            'is_favorite',
+            'is_favorited',
             'is_in_shopping_cart',
             'name',
             'image',
             'text',
             'cooking_time'
         ]
-        read_only_fields = ['author', 'is_favorite']
+        read_only_fields = ['author', 'is_favorited']
         model = Recipe
-
-
-class RecipeLiteSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Recipe
-        fields = ['id', 'name', 'image', 'cooking_time']

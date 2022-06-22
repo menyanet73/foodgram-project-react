@@ -1,15 +1,21 @@
+import os
+
 from django.db.models import (Case, Exists, IntegerField, OuterRef, Q, Sum,
                               Value, When)
-from django.http import FileResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from foodgram.settings import STATIC_ROOT
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import exceptions
+from users.serializers import RecipeLiteSerializer
 
 from recipes import paginators, serializers
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
+from recipes.filters import RecipeFilter
 from recipes.permissions import IsAuthor
 from recipes.viewsets import ReadOnlyViewset
 
@@ -42,7 +48,8 @@ class IngredientViewset(ReadOnlyViewset):
 
 class RecipeViewset(viewsets.ModelViewSet):
     pagination_class = paginators.PageNumberLimitPagination
-    # filter_backends = []
+    filter_backends = (DjangoFilterBackend, )
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -64,25 +71,8 @@ class RecipeViewset(viewsets.ModelViewSet):
             user=self.request.user.id,
             recipes=OuterRef('pk'))
         queryset = Recipe.objects.annotate(
-            is_favorite=Exists(favorites),
+            is_favorited=Exists(favorites),
             is_in_shopping_cart=Exists(shopping_carts))
-        author = self.request.query_params.get('author')
-        tags = self.request.query_params.getlist('tags')
-        if self.request.query_params.get('is_favorite'):
-            queryset = queryset.filter(is_favorite=True)
-        if self.request.query_params.get('is_in_shopping_cart'):
-            queryset = queryset.filter(is_in_shopping_cart=True)
-        if tags:
-            result_queryset = 0
-            for tag in tags:
-                new_queryset = queryset.filter(tags__slug__iexact=tag)
-                if not result_queryset:
-                    result_queryset = new_queryset
-                else:
-                    result_queryset.union(new_queryset)
-            queryset = result_queryset
-        if author:
-            queryset = queryset.filter(author__id=author)
         return queryset.order_by('-created')
 
     def perform_create(self, serializer):
@@ -100,7 +90,7 @@ class RecipeViewset(viewsets.ModelViewSet):
             favorite = Favorite.objects.create(user=user)
             favorite.recipes.add(recipe)
             favorite.save()
-            serializer = serializers.RecipeLiteSerializer(instance=recipe)
+            serializer = RecipeLiteSerializer(instance=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
             if not Favorite.objects.filter(user=user, recipes=recipe).exists():
@@ -120,7 +110,7 @@ class RecipeViewset(viewsets.ModelViewSet):
             shopping_cart = ShoppingCart.objects.get_or_create(user=user)[0]
             shopping_cart.recipes.add(recipe)
             shopping_cart.save()
-            serializer = serializers.RecipeLiteSerializer(instance=recipe)
+            serializer = RecipeLiteSerializer(instance=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
             if not ShoppingCart.objects.filter(user=user, recipes=recipe):
@@ -138,10 +128,15 @@ class RecipeViewset(viewsets.ModelViewSet):
         shoplist = [ingredient for ingredient in ingredients_amount]
         content = ''
         for ingredient in shoplist:
-            content += (f"{ingredient['id__name']},"
-                        f"{ingredient['id__measurement_unit']} -"
-                        f"{ingredient['amount']}")
+            content += (f"{ingredient['id__name']}, "
+                        f"{ingredient['amount']} "
+                        f"{ingredient['id__measurement_unit']}")
             if ingredient != shoplist[-1]:
                 content += '\n'
-        response = FileResponse(content, content_type='text/plain')
+        path = os.path.join(STATIC_ROOT, 'shoplist.txt')
+        temp = open(path, 'w')
+        temp.write(content)
+        response = HttpResponse(content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename=shoplist.txt'
+        response.write(content)
         return response
