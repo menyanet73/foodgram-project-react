@@ -37,7 +37,7 @@ POSTGRES_PASSWORD='postgres'
 DB_HOST='db'
 DB_PORT='5432'
 SECRET_KEY='djangosecretkey'
-ALLOWED_HOSTS=['your_ip', 'localhost']
+ALLOWED_HOSTS='your.ip'
 ```
 
 ```sh
