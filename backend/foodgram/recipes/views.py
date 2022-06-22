@@ -126,7 +126,7 @@ class RecipeViewset(viewsets.ModelViewSet):
                               .values('id__name', 'id__measurement_unit')
                               .annotate(amount=Sum('amount')))
         shoplist = [ingredient for ingredient in ingredients_amount]
-        content = ''
+        content = 'Список продуктов от Foodgram: \n\n'
         for ingredient in shoplist:
             content += (f"{ingredient['id__name']}, "
                         f"{ingredient['amount']} "
