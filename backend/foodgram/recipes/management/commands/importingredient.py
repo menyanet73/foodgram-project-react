@@ -14,9 +14,9 @@ class Command(BaseCommand):
         path = os.path.join(STATIC_ROOT, 'data/ingredients.csv')
         with codecs.open(path, encoding='utf-8') as f:
             reader = csv.reader(f)
+            if Ingredient.objects.exists():
+                return None
             for row in reader:
-                if Ingredient.objects.exists():
-                    return None
                 Ingredient.objects.get_or_create(
                     name=row[0], measurement_unit=row[1])
                 print(f'{row[0]} added')
