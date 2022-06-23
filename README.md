@@ -53,6 +53,11 @@ docker-compose up
 
 Done!
 
+For reviewer:<br>
+admin account<br>
+admin<br>
+ad@min.ru<br>
+admin<br>
 
 ### Author
 ##### https://github.com/menyanet73
