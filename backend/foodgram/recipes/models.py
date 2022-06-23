@@ -72,6 +72,9 @@ class Recipe(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    def in_favorites(self):
+        return Favorite.objects.filter(recipes__id__exact=self.id).count()
+
 
 class Favorite(models.Model):
     user = models.ForeignKey(

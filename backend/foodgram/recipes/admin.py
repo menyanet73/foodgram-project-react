@@ -19,8 +19,12 @@ class IngredientAmountAdmin(admin.ModelAdmin):
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'author', 'cooking_time')
+    list_display = ('id', 'name', 'author', 'cooking_time', 'in_favorites')
     list_filter = ('name', 'author', 'tags')
+    readonly_fields = ('in_favorites', )
+
+    def in_favorites(self, obj):
+        return obj.in_favorites()
 
 
 class FavoriteAdmin(admin.ModelAdmin):
