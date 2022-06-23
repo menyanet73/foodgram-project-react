@@ -1,5 +1,7 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 from users.models import User
+
 
 from recipes.validators import validate_color
 
@@ -18,12 +20,14 @@ class Ingredient(models.Model):
 
 
 class IngredientAmount(models.Model):
-    item_id = models.AutoField(primary_key=True)
-    id = models.ForeignKey(
+    ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         related_name='amount', verbose_name='Ингредиент')
-    amount = models.IntegerField(verbose_name='Количество')
+    amount = models.IntegerField(
+        verbose_name='Количество',
+        validators=[MinValueValidator(1)]
+    )
 
     class Meta:
         verbose_name = 'Количество ингредиента'
@@ -61,7 +65,10 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag, related_name='recipes', verbose_name='Теги')
     image = models.ImageField(verbose_name='Изображение')
-    cooking_time = models.IntegerField(verbose_name='Время приготовления')
+    cooking_time = models.IntegerField(
+        verbose_name='Время приготовления',
+        validators=[MinValueValidator(1)]
+    )
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

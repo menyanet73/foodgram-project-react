@@ -13,9 +13,9 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class IngredientAmountAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item_id', 'amount')
-    list_filter = ('id__name',)
-    list_select_related = ('id',)
+    list_display = ('id', 'ingredient', 'amount')
+    list_filter = ('ingredient__name',)
+    list_select_related = ('ingredient',)
 
 
 class RecipeAdmin(admin.ModelAdmin):

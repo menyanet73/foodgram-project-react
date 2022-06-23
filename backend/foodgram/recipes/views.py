@@ -1,32 +1,29 @@
-import os
+from io import StringIO
+from wsgiref.util import FileWrapper
 
 from django.db.models import (Case, Exists, IntegerField, OuterRef, Q, Sum,
                               Value, When)
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from foodgram.settings import STATIC_ROOT
-from rest_framework import permissions, status, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.views import exceptions
-from users.serializers import RecipeLiteSerializer
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from recipes import paginators, serializers
+from recipes.filters import RecipeFilter
+from recipes.mixins import FavoriteShoplistModelMixin
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
-from recipes.filters import RecipeFilter
-from recipes.permissions import IsAuthor
-from recipes.viewsets import ReadOnlyViewset
+from recipes.permissions import IsAuthorOrAuthOrReadOnly
 
 
-class TagViewset(ReadOnlyViewset):
+class TagViewset(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
     pagination_class = None
 
 
-class IngredientViewset(ReadOnlyViewset):
+class IngredientViewset(ReadOnlyModelViewSet):
     serializer_class = serializers.IngregientsSerializer
     pagination_class = None
 
@@ -46,22 +43,16 @@ class IngredientViewset(ReadOnlyViewset):
         return queryset
 
 
-class RecipeViewset(viewsets.ModelViewSet):
+class RecipeViewset(FavoriteShoplistModelMixin, viewsets.ModelViewSet):
     pagination_class = paginators.PageNumberLimitPagination
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
+    permission_classes = [IsAuthorOrAuthOrReadOnly, ]
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return serializers.GetRecipeSerializer
         return serializers.RecipeSerializer
-
-    def get_permissions(self):
-        if self.request.method in ['PATCH', 'DELETE']:
-            self.permission_classes = [IsAuthor, ]
-        else:
-            self.permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-        return super().get_permissions()
 
     def get_queryset(self):
         favorites = Favorite.objects.filter(
@@ -80,63 +71,23 @@ class RecipeViewset(viewsets.ModelViewSet):
             'author'] = serializer.context['request'].user
         return super().perform_create(serializer)
 
-    @action(['post', 'delete'], detail=True)
-    def favorite(self, request, pk, *args, **kwargs):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        if request.method == 'POST':
-            if Favorite.objects.filter(user=user, recipes=recipe).exists():
-                raise exceptions.ValidationError('Recipe already in favorites')
-            favorite = Favorite.objects.create(user=user)
-            favorite.recipes.add(recipe)
-            favorite.save()
-            serializer = RecipeLiteSerializer(instance=recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if not Favorite.objects.filter(user=user, recipes=recipe).exists():
-                raise exceptions.ValidationError('Recipe not in favorites')
-            favorite = Favorite.objects.get(user=user, recipes=recipe)
-            favorite.recipes.remove(recipe)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(['post', 'delete'], detail=True)
-    def shopping_cart(self, request, *args, **kwargs):
-        id = kwargs['pk']
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=id)
-        if request.method == 'POST':
-            if ShoppingCart.objects.filter(user=user, recipes=recipe).exists():
-                raise exceptions.ValidationError('Recipe already in shopcart')
-            shopping_cart = ShoppingCart.objects.get_or_create(user=user)[0]
-            shopping_cart.recipes.add(recipe)
-            shopping_cart.save()
-            serializer = RecipeLiteSerializer(instance=recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if not ShoppingCart.objects.filter(user=user, recipes=recipe):
-                raise exceptions.ValidationError('Recipe not in shopcart')
-            shopping_cart = ShoppingCart.objects.get(user=user, recipes=recipe)
-            shopping_cart.recipes.remove(recipe)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
     @action(['GET'], detail=False)
     def download_shopping_cart(self, request, *args, **kwargs):
         ingredients_amount = (IngredientAmount.objects
                               .filter(recipes__cart__user=request.user)
-                              .values('id__name', 'id__measurement_unit')
-                              .annotate(amount=Sum('amount')))
+                              .values('ingredient__name',
+                                      'ingredient__measurement_unit')
+                              .annotate(sum_amount=Sum('amount')))
         shoplist = [ingredient for ingredient in ingredients_amount]
         content = 'Список продуктов от Foodgram: \n\n'
         for ingredient in shoplist:
-            content += (f"{ingredient['id__name']}, "
-                        f"{ingredient['amount']} "
-                        f"{ingredient['id__measurement_unit']}")
+            content += (f"{ingredient['ingredient__name']}, "
+                        f"{ingredient['sum_amount']} "
+                        f"{ingredient['ingredient__measurement_unit']}")
             if ingredient != shoplist[-1]:
                 content += '\n'
-        path = os.path.join(STATIC_ROOT, 'shoplist.txt')
-        temp = open(path, 'w')
-        temp.write(content)
-        response = HttpResponse(content_type='text/plain')
+        file = StringIO(content)
+        response = HttpResponse(FileWrapper(file),
+                                content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename=shoplist.txt'
-        response.write(content)
         return response

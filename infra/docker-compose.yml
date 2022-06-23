@@ -21,7 +21,7 @@ services:
       python manage.py collectstatic --no-input
       && python manage.py makemigrations
       && python manage.py migrate --no-input
-      && python manage.py importingredient
+      && python manage.py import_ingredient
       && gunicorn foodgram.wsgi:application --bind 0:8000"
     
   frontend:
