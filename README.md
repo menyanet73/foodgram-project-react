@@ -55,9 +55,9 @@ Done!
 
 For reviewer:<br>
 admin account<br>
-admin<br>
-ad@min.ru<br>
-admin<br>
+username: admin<br>
+email: ad@min.ru<br>
+password: admin<br>
 
 ### Author
 ##### https://github.com/menyanet73
