@@ -37,7 +37,7 @@ POSTGRES_PASSWORD='postgres'
 DB_HOST='db'
 DB_PORT='5432'
 SECRET_KEY='djangosecretkey'
-ALLOWED_HOSTS=['your_ip', 'localhost']
+ALLOWED_HOSTS='your.ip'
 ```
 
 ```sh
@@ -53,6 +53,11 @@ docker-compose up
 
 Done!
 
+For reviewer:<br>
+admin account<br>
+username: admin<br>
+email: ad@min.ru<br>
+password: admin<br>
 
 ### Author
 ##### https://github.com/menyanet73

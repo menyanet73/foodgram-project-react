@@ -13,14 +13,18 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class IngredientAmountAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item_id', 'amount')
-    list_filter = ('id__name',)
-    list_select_related = ('id',)
+    list_display = ('id', 'ingredient', 'amount')
+    list_filter = ('ingredient__name',)
+    list_select_related = ('ingredient',)
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'author', 'cooking_time')
+    list_display = ('id', 'name', 'author', 'cooking_time', 'in_favorites')
     list_filter = ('name', 'author', 'tags')
+    readonly_fields = ('in_favorites', )
+
+    def in_favorites(self, obj):
+        return obj.in_favorites()
 
 
 class FavoriteAdmin(admin.ModelAdmin):

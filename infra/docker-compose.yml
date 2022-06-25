@@ -7,7 +7,7 @@ services:
     env_file:
       - ../.env
   backend:
-    image: menyanet73/foodgram:v22.06.22
+    image: menyanet73/foodgram:v24.06.22
     restart: always
     volumes:
       - static_value:/app/staticfiles/
@@ -19,8 +19,9 @@ services:
       - ../.env
     command: bash -c "
       python manage.py collectstatic --no-input
+      && python manage.py makemigrations
       && python manage.py migrate --no-input
-      && python manage.py importingredient
+      && python manage.py import_ingredient
       && gunicorn foodgram.wsgi:application --bind 0:8000"
     
   frontend:
