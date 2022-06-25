@@ -79,10 +79,12 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, field):
         if len(field) < 1:
             raise serializers.ValidationError('required field')
+        repeat_list = []
         for ingredient in field:
-            if field.count(ingredient) > 1:
+            if ingredient['ingredient']['id'] in repeat_list:
                 raise serializers.ValidationError(
                     'Do not allowed repeat ingredient')
+            repeat_list.append(ingredient['ingredient']['id'])
         return field
 
     def validate_tags(self, field):
