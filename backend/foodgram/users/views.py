@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -21,7 +22,7 @@ class UserViewSet(viewsets.UsersViewSet):
             return serializers.SetPasswordSerializer
         return serializers.UsersSerializer
 
-    @action(['get'], detail=False)  # TODO: add permission
+    @action(['get'], detail=False)
     def me(self, request, *args, **kwargs):
         serializer = self.get_serializer(instance=request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -33,3 +34,20 @@ class UserViewSet(viewsets.UsersViewSet):
         self.request.user.set_password(serializer.data["new_password"])
         self.request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(['post', 'delete'], detail=True)
+    def subscribe(self, request, id, *args, **kwargs):
+        follower = request.user
+        following = get_object_or_404(models.User, id=id)
+        if request.method == 'POST':
+            create_serializer = self.get_serializer(
+                data={'user': follower.id,
+                      'following': id}
+            )
+            create_serializer.is_valid(raise_exception=True)
+            create_serializer.save()
+            serializer = serializers.FollowResponseSerializer(
+                instance=following,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)

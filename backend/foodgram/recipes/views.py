@@ -4,6 +4,7 @@ from wsgiref.util import FileWrapper
 from django.db.models import (Case, Exists, IntegerField, OuterRef, Q, Sum,
                               Value, When)
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -70,6 +71,22 @@ class RecipeViewset(FavoriteShoplistModelMixin, viewsets.ModelViewSet):
         serializer.validated_data[
             'author'] = serializer.context['request'].user
         return super().perform_create(serializer)
+
+    @action(['post', 'delete'], detail=True)
+    def favorite(self, request, pk, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=pk)
+        if request.method == 'POST':
+            return self.item_create(Favorite, request.user, recipe)
+        if request.method == 'DELETE':
+            return self.item_delete(Favorite, request.user, recipe)
+
+    @action(['post', 'delete'], detail=True)
+    def shopping_cart(self, request, pk, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=pk)
+        if request.method == 'POST':
+            return self.item_create(ShoppingCart, request.user, recipe)
+        if request.method == 'DELETE':
+            return self.item_delete(ShoppingCart, request.user, recipe)
 
     @action(['GET'], detail=False)
     def download_shopping_cart(self, request, *args, **kwargs):

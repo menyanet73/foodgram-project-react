@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from users.serializers import UsersSerializer
 
+from users.serializers import UsersSerializer
 from recipes.fields import ImageSerializerField
 from recipes.models import Ingredient, IngredientAmount, Recipe, Tag
 
@@ -16,9 +16,6 @@ class IngredientAmountCreateSerializer(serializers.ModelSerializer):
         model = IngredientAmount
         fields = ['id', 'name', 'amount', 'measurement_unit']
 
-    def get_id(self, obj):
-        return obj.ingredient.id
-
     def validate_amount(self, amount):
         if not isinstance(amount, int):
             raise serializers.ValidationError('Amount must be a int')
@@ -28,14 +25,13 @@ class IngredientAmountCreateSerializer(serializers.ModelSerializer):
 
 
 class IngredientAmountGetSerializer(IngredientAmountCreateSerializer):
-    measurement_unit = serializers.SerializerMethodField()
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit')
+    name = serializers.CharField(source='ingredient.name')
 
     class Meta:
         model = IngredientAmount
         fields = ['id', 'name', 'measurement_unit', 'amount']
-
-    def get_measurement_unit(self, obj):
-        return obj.ingredient.name
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -72,12 +68,26 @@ class RecipeSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time'
         ]
-        read_only_fields = ['author', 'is_favorited', 'is_in_shopping_cart']
+        read_only_fields = ['author']
         model = Recipe
 
     def validate_cooking_time(self, field):
         if field < 1:
             raise serializers.ValidationError('Min 1 minute')
+        return field
+
+    def validate_ingredients(self, field):
+        if len(field) < 1:
+            raise serializers.ValidationError('required field')
+        for ingredient in field:
+            if field.count(ingredient) > 1:
+                raise serializers.ValidationError(
+                    'Do not allowed repeat ingredient')
+        return field
+
+    def validate_tags(self, field):
+        if len(field) < 1:
+            raise serializers.ValidationError('Required field')
         return field
 
     def create(self, validated_data):
@@ -112,8 +122,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 class GetRecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UsersSerializer()
-    is_favorited = serializers.BooleanField()
-    is_in_shopping_cart = serializers.BooleanField()
+    is_favorited = serializers.BooleanField(default=False)
+    is_in_shopping_cart = serializers.BooleanField(default=False)
     ingredients = IngredientAmountGetSerializer(many=True)
 
     class Meta:

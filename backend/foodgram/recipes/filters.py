@@ -1,9 +1,9 @@
 from django.forms import ModelChoiceField
 from django_filters import AllValuesMultipleFilter
 from django_filters import rest_framework as filters
-from users.models import User
 from django_filters.rest_framework.filters import BooleanFilter
 
+from users.models import User
 from recipes.models import Recipe
 
 
