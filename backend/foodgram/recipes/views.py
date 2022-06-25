@@ -6,13 +6,14 @@ from django.db.models import (Case, Exists, IntegerField, OuterRef, Q, Sum,
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from recipes import paginators, serializers
 from recipes.filters import RecipeFilter
-from recipes.mixins import FavoriteShoplistModelMixin
+from recipes.mixins import FavoriteModelMixin
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
 from recipes.permissions import IsAuthorOrAuthOrReadOnly
@@ -44,7 +45,7 @@ class IngredientViewset(ReadOnlyModelViewSet):
         return queryset
 
 
-class RecipeViewset(FavoriteShoplistModelMixin, viewsets.ModelViewSet):
+class RecipeViewset(FavoriteModelMixin, viewsets.ModelViewSet):
     pagination_class = paginators.PageNumberLimitPagination
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
@@ -76,17 +77,21 @@ class RecipeViewset(FavoriteShoplistModelMixin, viewsets.ModelViewSet):
     def favorite(self, request, pk, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
-            return self.item_create(Favorite, request.user, recipe)
+            serializer = self.item_create(Favorite, request.user, recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            return self.item_delete(Favorite, request.user, recipe)
+            self.item_delete(Favorite, request.user, recipe)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(['post', 'delete'], detail=True)
     def shopping_cart(self, request, pk, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
-            return self.item_create(ShoppingCart, request.user, recipe)
+            serializer = self.item_create(ShoppingCart, request.user, recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            return self.item_delete(ShoppingCart, request.user, recipe)
+            self.item_delete(ShoppingCart, request.user, recipe)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(['GET'], detail=False)
     def download_shopping_cart(self, request, *args, **kwargs):
