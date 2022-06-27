@@ -20,6 +20,8 @@ class UserViewSet(viewsets.UsersViewSet):
     def get_serializer_class(self):
         if self.action == 'set_password':
             return serializers.SetPasswordSerializer
+        if self.action in ['subscribe', 'subscriptions']:
+            return serializers.FollowSerializer
         return serializers.UsersSerializer
 
     @action(['get'], detail=False)
@@ -36,13 +38,13 @@ class UserViewSet(viewsets.UsersViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(['post', 'delete'], detail=True)
-    def subscribe(self, request, id, *args, **kwargs):
+    def subscribe(self, request, pk, *args, **kwargs):
         follower = request.user
-        following = get_object_or_404(models.User, id=id)
+        following = get_object_or_404(models.User, id=pk)
         if request.method == 'POST':
             create_serializer = self.get_serializer(
                 data={'user': follower.id,
-                      'following': id}
+                      'following': pk}
             )
             create_serializer.is_valid(raise_exception=True)
             create_serializer.save()
@@ -51,3 +53,17 @@ class UserViewSet(viewsets.UsersViewSet):
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            follow = get_object_or_404(
+                models.Follow, user=follower, following=following)
+            follow.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(['get'], detail=False)
+    def subscriptions(self, request, *args, **kwargs):
+        queryset = models.User.objects.filter(following__user=request.user)
+        follows = self.paginate_queryset(queryset)
+        serializer = serializers.FollowResponseSerializer(
+            follows, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)

@@ -75,7 +75,7 @@ class RecipeLiteSerializer(serializers.ModelSerializer):
 
 
 class FollowResponseSerializer(UsersSerializer):
-    recipes = RecipeLiteSerializer(many=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -92,6 +92,14 @@ class FollowResponseSerializer(UsersSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
+
+    def get_recipes(self, obj):
+        recipes_limit = self.context['request'].query_params.get(
+            'recipes_limit')
+        recipes = obj.recipes.all()
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        return RecipeLiteSerializer(recipes, many=True).data
 
 
 class FollowSerializer(serializers.ModelSerializer):
