@@ -53,6 +53,11 @@ class UserViewSet(viewsets.UsersViewSet):
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            follow = get_object_or_404(
+                models.Follow, user=follower, following=following)
+            follow.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(['get'], detail=False)
     def subscriptions(self, request, *args, **kwargs):
