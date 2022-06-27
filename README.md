@@ -53,12 +53,6 @@ docker-compose up
 
 Done!
 
-For reviewer:<br>
-admin account<br>
-username: admin<br>
-email: ad@min.ru<br>
-password: admin<br>
-
 ### Author
 ##### https://github.com/menyanet73
 ### Frontend
